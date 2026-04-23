@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>🏀 Minibasket Scoresheet PRO</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --orange: #FF6B00;
+    --orange-light: #FF8C35;
+    --teal: #00897B;
+    --teal-light: #26A69A;
+    --blue-dark: #003087;
+    --blue-mid: #1565C0;
+    --darker: #060e1c;
+    --surface: #111f35;
+    --surface2: #182c47;
+    --text: #e8f0f8;
+    --text-dim: #7a96b5;
+    --foul-red: #ef5350;
+    --white: #ffffff;
+    --radius: 10px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    background: var(--darker);
+    color: var(--text);
+    font-family: 'Barlow', sans-serif;
+    min-height: 100vh;
+  }
+
+  /* ─── HEADER & SCOREBOARD ─── */
+  header {
+    background: linear-gradient(160deg, #001a4d 0%, #002060 60%, #003050 100%);
+    border-bottom: 3px solid var(--orange);
+    padding: 10px 14px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.6);
+  }
+
+  .header-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .app-title { font-family: 'Barlow Condensed', sans-serif; font-size: 18px; font-weight: 900; color: var(--white); line-height: 1; }
+  .app-title span { color: var(--orange); }
+  
+  .period-badge {
+    background: var(--orange); color: white;
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 20px;
+    width: 38px; height: 38px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .scoreboard { display: flex; justify-content: space-around; align-items: center; background: rgba(0,0,0,0.2); padding: 8px; border-radius: 8px; }
+  .score-box { text-align: center; }
+  .score-val { font-family: 'Barlow Condensed', sans-serif; font-size: 36px; font-weight: 900; }
+  .team-label { font-size: 10px; font-weight: 800; text-transform: uppercase; color: var(--text-dim); }
+
+  /* ─── TAB SYSTEM ─── */
+  .tab-bar { display: flex; background: var(--surface2); sticky; top: 125px; z-index: 90; }
+  .tab-btn { flex: 1; padding: 12px; border: none; background: transparent; color: var(--text-dim); font-family: 'Barlow Condensed', sans-serif; font-weight: 800; text-transform: uppercase; cursor: pointer; border-bottom: 3px solid transparent; }
+  .tab-btn.active { color: var(--white); border-bottom-color: var(--orange); background: rgba(255,255,255,0.05); }
+
+  .view { display: none; padding: 15px 10px; }
+  .view.active { display: block; }
+
+  /* ─── PLAYER CARDS ─── */
+  .player-card { background: var(--surface); border-radius: var(--radius); margin-bottom: 8px; border: 1px solid rgba(255,255,255,0.05); overflow: hidden; }
+  .player-card.off-match { opacity: 0.3; filter: grayscale(1); }
+  
+  .player-header { display: flex; align-items: center; padding: 8px 12px; background: var(--surface2); gap: 10px; }
+  .toggles { display: flex; gap: 5px; }
+  .tog { width: 30px; height: 30px; border-radius: 6px; border: 2px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 900; cursor: pointer; }
+  .tog-p.active { background: var(--teal); border-color: var(--teal-light); color: white; }
+  .tog-m.active { background: var(--blue-mid); border-color: #64b5f6; color: white; }
+
+  .p-name { flex: 1; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 16px; }
+  .p-total { background: var(--orange); padding: 4px 8px; border-radius: 4px; font-weight: 900; min-width: 30px; text-align: center; }
+
+  .player-controls { padding: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .control-group { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.03); padding: 5px; border-radius: 6px; }
+  .btn-act { flex: 1; height: 36px; border: none; border-radius: 4px; font-weight: 900; font-family: 'Barlow Condensed'; cursor: pointer; }
+  .btn-plus { background: var(--orange); color: white; }
+  .btn-minus { background: rgba(255,255,255,0.1); color: var(--text-dim); }
+  .btn-foul { background: var(--foul-red); color: white; }
+
+  /* ─── STATS TABLE ─── */
+  .stats-container { background: var(--surface); border-radius: 12px; padding: 15px; margin-bottom: 20px; border: 1px solid var(--surface2); }
+  .stats-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+  .stats-table th { text-align: left; font-size: 10px; color: var(--text-dim); padding: 8px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+  .stats-table td { padding: 10px 8px; border-bottom: 1px solid rgba(255,255,255,0.05); font-family: 'Barlow Condensed'; font-weight: 600; }
+  .row-total { background: rgba(255,107,0,0.1); font-weight: 900 !important; }
+  .foul-cell { color: var(--foul-red); }
+
+  .historize-section { padding: 10px; }
+  .btn-next { width: 100%; padding: 15px; background: var(--teal); border: none; border-radius: 8px; color: white; font-family: 'Barlow Condensed'; font-weight: 800; font-size: 16px; cursor: pointer; margin-bottom: 20px; }
+
+  .status-tag { font-size: 9px; padding: 2px 5px; border-radius: 3px; text-transform: uppercase; margin-left: 5px; }
+  .tag-live { background: var(--teal); color: white; }
+</head>
+<body>
+
+<header>
+  <div class="header-top">
+    <div class="app-title">MINIBASKET <span>SCORESHEET</span></div>
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <span style="font-size: 10px; font-weight: 800; color: var(--text-dim);">PERIODO</span>
+      <div class="period-badge" id="periodDisplay">1</div>
+    </div>
+  </div>
+
+  <div class="scoreboard">
+    <div class="score-box">
+      <div class="team-label">Home</div>
+      <div class="score-val" id="homeScore">0</div>
+    </div>
+    <div style="font-size: 24px; color: var(--text-dim); font-weight: 100;">|</div>
+    <div class="score-box">
+      <div class="team-label">
+        <input type="text" value="OSPITI" class="team-label" style="background:transparent; border:none; color:inherit; text-align:center; width:60px;">
+      </div>
+      <div class="score-val" id="awayScore">0</div>
+      <div style="display:flex; gap:5px;">
+        <button class="tog" onclick="updateAway(-1)" style="width:20px; height:20px;">-</button>
+        <button class="tog" onclick="updateAway(1)" style="width:20px; height:20px;">+</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="tab-bar">
+  <button class="tab-btn active" onclick="switchTab('game')">Gara</button>
+  <button class="tab-btn" onclick="switchTab('stats')">Statistiche</button>
+</div>
+
+<div id="view-game" class="view active">
+  <div class="historize-section">
+    <button class="btn-next" onclick="nextPeriod()">CHIUDI PERIODO <span id="nextPLabel">1</span>/4</button>
+  </div>
+  
+  <div id="playersList">
+    </div>
+</div>
+
+<div id="view-stats" class="view">
+  
+  <div class="stats-container">
+    <h3 style="font-family: 'Barlow Condensed'; color: var(--orange); margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between;">
+      LIVE: TEMPO <span id="currentStatP">1</span>
+      <span class="status-tag tag-live">In Campo Ora</span>
+    </h3>
+    <table class="stats-table">
+      <thead>
+        <tr>
+          <th>GIOCATORE</th>
+          <th style="text-align:center">FALLI</th>
+          <th style="text-align:center">PUNTI</th>
+        </tr>
+      </thead>
+      <tbody id="currentStatsBody">
+        </tbody>
+    </table>
+  </div>
+
+  <div class="stats-container">
+    <h3 style="font-family: 'Barlow Condensed'; color: var(--blue-mid); margin-bottom: 10px;">TOTALI PARTITA</h3>
+    <table class="stats-table">
+      <thead>
+        <tr>
+          <th>GIOCATORE</th>
+          <th style="text-align:center">P1</th>
+          <th style="text-align:center">P2</th>
+          <th style="text-align:center">P3</th>
+          <th style="text-align:center">P4</th>
+          <th style="text-align:center">FALLI</th>
+          <th style="text-align:center" class="row-total">TOT</th>
+        </tr>
+      </thead>
+      <tbody id="totalStatsBody">
+        </tbody>
+    </table>
+  </div>
+
+  <div style="text-align: center; color: var(--text-dim); font-size: 10px; margin-top: 20px;">
+    Generato da Minibasket Scoresheet - <span id="timestamp"></span>
+  </div>
+</div>
+
+<script>
+  let currentPeriod = 1;
+  let scoreAway = 0;
+  
+  const players = [
+    { id: 1, num: '4', name: 'Player 4', inField: true, inMatch: true, fouls: 0, pts: [0,0,0,0] },
+    { id: 2, num: '5', name: 'Player 5', inField: true, inMatch: true, fouls: 0, pts: [0,0,0,0] },
+    { id: 3, num: '7', name: 'Player 7', inField: true, inMatch: true, fouls: 0, pts: [0,0,0,0] },
+    { id: 4, num: '8', name: 'Player 8', inField: true, inMatch: true, fouls: 0, pts: [0,0,0,0] },
+    { id: 5, num: '10', name: 'Player 10', inField: false, inMatch: true, fouls: 0, pts: [0,0,0,0] },
+    { id: 6, num: '12', name: 'Player 12', inField: false, inMatch: true, fouls: 0, pts: [0,0,0,0] },
+    { id: 7, num: '13', name: 'Player 13', inField: false, inMatch: true, fouls: 0, pts: [0,0,0,0] },
+    { id: 8, num: '15', name: 'Player 15', inField: false, inMatch: true, fouls: 0, pts: [0,0,0,0] },
+    { id: 9, num: '20', name: 'Player 20', inField: false, inMatch: true, fouls: 0, pts: [0,0,0,0] },
+    { id: 10, num: '24', name: 'Player 24', inField: false, inMatch: true, fouls: 0, pts: [0,0,0,0] },
+    { id: 11, num: '30', name: 'Riserva 1', inField: false, inMatch: false, fouls: 0, pts: [0,0,0,0] },
+    { id: 12, num: '99', name: 'Riserva 2', inField: false, inMatch: false, fouls: 0, pts: [0,0,0,0] }
+  ];
+
+  function init() {
+    renderPlayers();
+    updateScore();
+  }
+
+  function renderPlayers() {
+    const list = document.getElementById('playersList');
+    list.innerHTML = '';
+    
+    players.forEach(p => {
+      const card = document.createElement('div');
+      card.className = `player-card ${!p.inMatch ? 'off-match' : ''}`;
+      
+      const totalPts = p.pts.reduce((a, b) => a + b, 0);
+      
+      card.innerHTML = `
+        <div class="player-header">
+          <div class="toggles">
+            <div class="tog tog-p ${p.inField ? 'active' : ''}" onclick="toggleStatus(${p.id}, 'field')" title="In Campo">P</div>
+            <div class="tog tog-m ${p.inMatch ? 'active' : ''}" onclick="toggleStatus(${p.id}, 'match')" title="A Referto">M</div>
+          </div>
+          <div style="font-size:12px; font-weight:800; width:20px">${p.num}</div>
+          <div class="p-name">${p.name}</div>
+          <div class="p-total">${totalPts}</div>
+        </div>
+        ${p.inField ? `
+        <div class="player-controls">
+          <div class="control-group">
+            <button class="btn-act btn-minus" onclick="addPts(${p.id}, -1)">-1</button>
+            <div style="font-weight:900; width:15px; text-align:center">${p.pts[currentPeriod-1]}</div>
+            <button class="btn-act btn-plus" onclick="addPts(${p.id}, 1)">+1</button>
+            <button class="btn-act btn-plus" onclick="addPts(${p.id}, 2)">+2</button>
+          </div>
+          <div class="control-group">
+            <button class="btn-act btn-minus" onclick="addFoul(${p.id}, -1)">-</button>
+            <div style="font-weight:900; width:15px; text-align:center; color:var(--foul-red)">${p.fouls}</div>
+            <button class="btn-act btn-foul" onclick="addFoul(${p.id}, 1)">FALLO</button>
+          </div>
+        </div>` : ''}
+      `;
+      list.appendChild(card);
+    });
+  }
+
+  function toggleStatus(id, type) {
+    const p = players.find(x => x.id === id);
+    if (type === 'field') p.inField = !p.inField;
+    if (type === 'match') p.inMatch = !p.inMatch;
+    renderPlayers();
+    renderStats();
+  }
+
+  function addPts(id, val) {
+    const p = players.find(x => x.id === id);
+    p.pts[currentPeriod-1] = Math.max(0, p.pts[currentPeriod-1] + val);
+    renderPlayers();
+    updateScore();
+  }
+
+  function addFoul(id, val) {
+    const p = players.find(x => x.id === id);
+    p.fouls = Math.max(0, p.fouls + val);
+    renderPlayers();
+  }
+
+  function updateScore() {
+    let total = 0;
+    players.forEach(p => {
+      total += p.pts.reduce((a, b) => a + b, 0);
+    });
+    document.getElementById('homeScore').innerText = total;
+    document.getElementById('awayScore').innerText = scoreAway;
+  }
+
+  function updateAway(val) {
+    scoreAway = Math.max(0, scoreAway + val);
+    updateScore();
+  }
+
+  function nextPeriod() {
+    if (currentPeriod < 4) {
+      if(confirm(`Chiudere il Periodo ${currentPeriod} e passare al successivo?`)) {
+        currentPeriod++;
+        document.getElementById('periodDisplay').innerText = currentPeriod;
+        document.getElementById('nextPLabel').innerText = currentPeriod;
+        document.getElementById('currentStatP').innerText = currentPeriod;
+        // Reset field status per il nuovo tempo? Opzionale:
+        // players.forEach(p => p.inField = false); 
+        renderPlayers();
+        renderStats();
+      }
+    } else {
+      alert("Partita terminata!");
+    }
+  }
+
+  function switchTab(tab) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    
+    event.currentTarget.classList.add('active');
+    document.getElementById('view-' + tab).classList.add('active');
+    
+    if(tab === 'stats') renderStats();
+  }
+
+  function renderStats() {
+    // Stats Tempo Corrente
+    const currentBody = document.getElementById('currentStatsBody');
+    currentBody.innerHTML = '';
+    players.filter(p => p.inField).forEach(p => {
+      currentBody.innerHTML += `
+        <tr>
+          <td><small>${p.num}</small> <strong>${p.name}</strong></td>
+          <td style="text-align:center" class="foul-cell">${p.fouls}</td>
+          <td style="text-align:center; color:var(--orange); font-weight:900">${p.pts[currentPeriod-1]}</td>
+        </tr>
+      `;
+    });
+
+    // Stats Totali (Solo chi è inMatch)
+    const totalBody = document.getElementById('totalStatsBody');
+    totalBody.innerHTML = '';
+    players.filter(p => p.inMatch).forEach(p => {
+      const tot = p.pts.reduce((a, b) => a + b, 0);
+      totalBody.innerHTML += `
+        <tr>
+          <td><small>${p.num}</small> ${p.name}</td>
+          <td style="text-align:center">${p.pts[0]}</td>
+          <td style="text-align:center">${p.pts[1]}</td>
+          <td style="text-align:center">${p.pts[2]}</td>
+          <td style="text-align:center">${p.pts[3]}</td>
+          <td style="text-align:center" class="foul-cell">${p.fouls}</td>
+          <td style="text-align:center" class="row-total">${tot}</td>
+        </tr>
+      `;
+    });
+
+    document.getElementById('timestamp').innerText = new Date().toLocaleString();
+  }
+
+  init();
+</script>
+
+</body>
+</html>
