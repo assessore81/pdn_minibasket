@@ -96,6 +96,7 @@
   .away-btn { background: var(--blue-mid); color: white; border: none; border-radius: 5px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 12px; padding: 3px 7px; cursor: pointer; transition: transform .12s; user-select: none; }
   .away-btn:active { transform: scale(.92); filter: brightness(1.2); }
   .team-name-input { background: transparent; border: none; border-bottom: 1px dashed rgba(255,255,255,0.2); color: var(--white); font-family: 'Barlow Condensed', sans-serif; font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; text-align: center; width: 100%; outline: none; padding: 1px 2px; }
+  .team-name-input:focus { border-bottom-color: var(--orange); }
 
   /* ─── PARZIALI STRIP ─── */
   .partials-strip { display: flex; gap: 4px; padding: 0 0 8px; overflow-x: auto; scrollbar-width: none; }
@@ -136,7 +137,7 @@
 
   /* ─── PLAYER CARD ─── */
   .player-card { background: var(--surface); border-radius: var(--radius); margin-bottom: 7px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05); transition: opacity .25s, border-color .2s; }
-  .player-card.inactive-period { opacity: 0.4; }
+  .player-card.inactive-period { opacity: 0.4; border-color: transparent; }
   .player-card.inactive-period .player-controls { display: none; }
 
   .player-header { display: flex; align-items: center; padding: 7px 10px; background: var(--surface2); gap: 7px; border-bottom: 1px solid rgba(255,255,255,0.05); user-select: none; }
@@ -149,8 +150,10 @@
   .tog.tog-match { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.12); color: transparent; }
   .tog.tog-match.on { background: #0d47a1; border-color: #1976D2; color: var(--white); }
 
-  .player-num { font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-weight: 800; color: var(--text-dim); width: 22px; text-align: center; flex-shrink: 0; }
-  .player-name { font-family: 'Barlow Condensed', sans-serif; font-size: 16px; font-weight: 700; color: var(--white); flex: 1; letter-spacing: .2px; }
+  /* Editabili: Numeri e Nomi */
+  .player-num-input { background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.05); border-radius: 4px; font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-weight: 800; color: var(--text-dim); width: 28px; text-align: center; flex-shrink: 0; padding: 4px 0; outline: none; transition: border-color .2s; }
+  .player-name-input { background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.05); border-radius: 4px; font-family: 'Barlow Condensed', sans-serif; font-size: 16px; font-weight: 700; color: var(--white); flex: 1; letter-spacing: .2px; padding: 3px 6px; outline: none; transition: border-color .2s; }
+  .player-num-input:focus, .player-name-input:focus { border-color: var(--orange); background: rgba(0,0,0,0.4); }
 
   .player-period-pts { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 700; color: var(--text-dim); background: rgba(255,255,255,0.05); border-radius: 5px; padding: 2px 7px; display: flex; flex-direction: column; align-items: center; line-height: 1.1; flex-shrink: 0; }
   .player-period-pts .pp-label { font-size: 7px; letter-spacing: 1px; text-transform: uppercase; }
@@ -287,7 +290,6 @@
 </head>
 <body>
 
-<!-- ══════════════ HEADER ══════════════ -->
 <header>
   <div class="header-top">
     <div class="app-title">
@@ -321,7 +323,6 @@
   <div class="partials-strip" id="partialsStrip"></div>
 </header>
 
-<!-- ══════════════ TAB BAR ══════════════ -->
 <div class="tab-bar">
   <button class="tab-btn active" id="tab-game" onclick="switchTab('game')">
     <span class="tab-icon">🏀</span> Partita
@@ -334,7 +335,6 @@
   </button>
 </div>
 
-<!-- ══════════════ VIEW: PARTITA ══════════════ -->
 <div class="view active" id="view-game">
   <div class="main">
     <button class="historize-btn" id="historizeBtn" onclick="openHistorize()">
@@ -362,17 +362,14 @@
   </div>
 </div>
 
-<!-- ══════════════ VIEW: STATS TEMPO ══════════════ -->
 <div class="view" id="view-period-stats">
   <div class="stats-page" id="periodStatsContent"></div>
 </div>
 
-<!-- ══════════════ VIEW: STATS TOTALI ══════════════ -->
 <div class="view" id="view-full-stats">
   <div class="stats-page" id="fullStatsContent"></div>
 </div>
 
-<!-- ══════════════ CONFIRM HISTORIZE MODAL ══════════════ -->
 <div class="confirm-modal-overlay" id="confirmModal" onclick="closeConfirmIfOverlay(event)">
   <div class="confirm-box">
     <div class="confirm-icon">🔒</div>
@@ -396,6 +393,7 @@
 </div>
 
 <script>
+// I tempi restano a 4, come richiesto
 const TOTAL_PERIODS = 4;
 
 const DEFAULT_PLAYERS = [
@@ -416,8 +414,11 @@ const DEFAULT_PLAYERS = [
   { num: '77', name: 'Matteo L.' },
   { num: '81', name: 'Lorenzo L.' },
   { num: '86', name: 'Giulio' },
+  // Slot extra per le riserve (modificabili dall'interfaccia)
   { num: '—',  name: 'Riserva 1' },
   { num: '—',  name: 'Riserva 2' },
+  { num: '—',  name: 'Riserva 3' },
+  { num: '—',  name: 'Riserva 4' },
 ];
 
 function makePlayer(p) {
@@ -437,7 +438,7 @@ let players = [];
 
 /* ─── Storage ─── */
 function load() {
-  const raw = localStorage.getItem('mb_state_v2');
+  const raw = localStorage.getItem('mb_state_v3');
   if (raw) {
     try {
       const s = JSON.parse(raw);
@@ -457,7 +458,7 @@ function resetState() {
 }
 
 function save() {
-  localStorage.setItem('mb_state_v2', JSON.stringify({ players, awayScore, currentPeriod, parziali }));
+  localStorage.setItem('mb_state_v3', JSON.stringify({ players, awayScore, currentPeriod, parziali }));
 }
 
 /* ─── Utilities ─── */
@@ -523,13 +524,27 @@ function updateTotals() {
   document.getElementById('totalFouls').textContent = players.reduce((t, p) => t + p.fouls, 0);
 }
 
+/* ─── Edit Info Giocatori ─── */
+function updatePlayerNum(idx, val) { players[idx].num = val; save(); }
+function updatePlayerName(idx, val) { players[idx].name = val; save(); }
+
 /* ─── RENDER GAME VIEW ─── */
 function render() {
   const list = document.getElementById('playerList');
   list.innerHTML = '';
   const pIdx = currentPeriod - 1;
 
-  players.forEach((p, i) => {
+  // Ordinamento: Attivi Tempo > Attivi Partita > Inattivi
+  let displayOrder = players.map((_, index) => index);
+  displayOrder.sort((a, b) => {
+    const pA = players[a]; const pB = players[b];
+    if (pA.activePeriod !== pB.activePeriod) return pA.activePeriod ? -1 : 1;
+    if (pA.inMatch !== pB.inMatch) return pA.inMatch ? -1 : 1;
+    return a - b; // Mantiene l'ordine originale tra elementi dello stesso gruppo
+  });
+
+  displayOrder.forEach((i) => {
+    const p = players[i];
     const tot = playerTotalPts(p);
     const curPts = playerPeriodPts(p, pIdx);
     const foulDanger = p.fouls >= 4;
@@ -554,8 +569,8 @@ function render() {
           <div class="tog tog-period${p.activePeriod?' on':''}" id="togP-${i}" onclick="togglePeriod(${i})" title="Presente in questo tempo">✓</div>
           <div class="tog tog-match${p.inMatch?' on':''}" id="togM-${i}" onclick="toggleMatch(${i})" title="In rosa partita">P</div>
         </div>
-        <span class="player-num">#${p.num}</span>
-        <span class="player-name">${p.name}</span>
+        <input class="player-num-input" value="${p.num}" oninput="updatePlayerNum(${i}, this.value)" maxlength="3">
+        <input class="player-name-input" value="${p.name}" oninput="updatePlayerName(${i}, this.value)">
         <div class="player-period-pts">
           <span class="pp-label">T${currentPeriod}</span>
           <span class="pp-val" id="pp-${i}">${curPts}</span>
@@ -609,14 +624,13 @@ function render() {
 function togglePeriod(idx) {
   players[idx].activePeriod = !players[idx].activePeriod;
   save();
-  document.getElementById(`card-${idx}`).classList.toggle('inactive-period', !players[idx].activePeriod);
-  document.getElementById(`togP-${idx}`).classList.toggle('on', players[idx].activePeriod);
+  render(); // Riordina la lista automaticamente
 }
 
 function toggleMatch(idx) {
   players[idx].inMatch = !players[idx].inMatch;
   save();
-  document.getElementById(`togM-${idx}`).classList.toggle('on', players[idx].inMatch);
+  render(); // Riordina la lista automaticamente
 }
 
 /* ─── Points ─── */
@@ -689,11 +703,10 @@ function renderPeriodStats() {
   const periodHome = isDone ? parziali[pIdx].home : currentHomePeriodScore();
   const periodAway = isDone ? parziali[pIdx].away : (awayScore - alreadyStoredAway());
 
-  // Active players = those with activePeriod true, OR if period is done, those who scored in this period
+  // Solo giocatori attivi (se tempo in corso) o chi ha segnato (se tempo chiuso)
   let activePlayers;
   if (isDone) {
     activePlayers = players.filter(p => playerPeriodPts(p, pIdx) > 0 || p.fouls > 0);
-    // fallback: all who were toggled (we don't store that after historize), show all with pts > 0
   } else {
     activePlayers = players.filter(p => p.activePeriod);
   }
@@ -750,7 +763,6 @@ function renderFullStats() {
   const awayName = document.getElementById('awayName').value || 'AVV';
   const homeTotal = players.reduce((t, p) => t + playerTotalPts(p), 0);
 
-  // Parziali grid
   let pgHtml = '';
   for (let i = 0; i < TOTAL_PERIODS; i++) {
     const p = parziali[i];
@@ -764,7 +776,7 @@ function renderFullStats() {
     </div>`;
   }
 
-  // Filter: inMatch players only; if none selected show all
+  // Filtro tramite il toggle 'P' blu
   const matchPlayers = players.filter(p => p.inMatch);
   const targetPlayers = matchPlayers.length > 0 ? matchPlayers : players;
   const noFilter = matchPlayers.length === 0;
@@ -823,7 +835,7 @@ function syncAwayName() { localStorage.setItem('mb_awayname', document.getElemen
 
 function confirmReset() {
   if (confirm('Azzerare tutti i dati della partita?')) {
-    localStorage.removeItem('mb_state_v2');
+    localStorage.removeItem('mb_state_v3');
     localStorage.removeItem('mb_homename');
     localStorage.removeItem('mb_awayname');
     resetState(); render(); switchTab('game');
